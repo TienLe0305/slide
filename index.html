@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taisei Oncho - AI Implementation Proposal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .slide {
+            min-height: 100vh;
+            display: none;
+            padding: 2rem;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: #34495e;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #555;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .timeline {
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .timeline-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(10px);
+        }
+
+        .timeline-item h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .phase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .phase-card {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            border-top: 4px solid #667eea;
+        }
+
+        .phase-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .phase-number {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            color: #2c3e50;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .slide-indicator {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section {
+            margin-bottom: 2rem;
+        }
+
+        .company-name {
+            font-size: 2rem;
+            color: #2c3e50;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .japanese-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .benefit-list {
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+
+        .benefit-list li {
+            margin: 0.8rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .benefit-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .budget-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .budget-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .budget-item:hover {
+            transform: scale(1.05);
+        }
+
+        .budget-amount {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .cta-section {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+
+        .cta-button {
+            background: white;
+            color: #667eea;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .slide-content {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.8rem;
+            }
+
+            .stats-grid,
+            .phase-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                bottom: 20px;
+            }
+
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="slide-indicator">
+            <span id="current-slide">1</span> / <span id="total-slides">8</span>
+        </div>
+
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="slide-content">
+                <div class="logo-section">
+                    <div class="company-name">大成温調株式会社</div>
+                    <div class="japanese-text">Taisei Oncho Co., Ltd.</div>
+                </div>
+                <h1>AI Implementation Proposal</h1>
+                <h3>Đề xuất Triển khai AI và Nâng cao Literacy</h3>
+                <div class="highlight">
+                    <p><strong>Mục tiêu:</strong> Xây dựng văn hóa AI tự chủ, bền vững và hiệu quả</p>
+                    <p><strong>Thời gian:</strong> 18 tháng triển khai</p>
+                    <p><strong>Đối tượng:</strong> 580 nhân viên trên 9 phòng ban</p>
+                </div>
+                <p style="margin-top: 2rem; font-size: 1rem; color: #666;">
+                    Ngày 5 tháng 6, 2025 | Manus AI Consulting Team
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Current Situation -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>Hiện trạng & Thách thức</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">72</span>
+                        <div class="stat-label">Năm kinh nghiệm</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">580</span>
+                        <div class="stat-label">Nhân viên</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">51+</span>
+                        <div class="stat-label">Tỷ yen vốn điều lệ</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">9</span>
+                        <div class="stat-label">Phòng ban chính</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem;">4 Thách thức Chính</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h4>1. Thiếu Kiến thức Cơ bản về AI</h4>
+                        <p>Nhân viên chưa có cơ hội học về AI và tiềm năng ứng dụng</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>2. Môi trường Sử dụng Hạn chế</h4>
+                        <p>Không có access đến các công cụ AI và guidelines sử dụng</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>3. Thiếu Động lực Sử dụng</h4>
+                        <p>Không có incentives rõ ràng cho việc chủ động sử dụng AI</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>4. Khoảng cách Lý thuyết-Thực hành</h4>
+                        <p>Thiếu cơ hội thử nghiệm AI trong công việc thực tế</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Framework Overview -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>Framework 3 Giai đoạn</h2>
+                <p>Thiết kế dựa trên 5 nguyên tắc hệ thống hóa của Taisei Oncho</p>
+                
+                <div class="phase-grid">
+                    <div class="phase-card">
+                        <div class="phase-number">1</div>
+                        <h3>Foundation & Enablement</h3>
+                        <p><strong>Tháng 1-6</strong></p>
+                        <ul class="benefit-list">
+                            <li>AI Portal nội bộ</li>
+                            <li>Basic AI Literacy (580 nhân viên)</li>
+                            <li>20-30 AI Ambassadors</li>
+                            <li>3-5 Pilot Projects</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="phase-card">
+                        <div class="phase-number">2</div>
+                        <h3>Department Specialization</h3>
+                        <p><strong>Tháng 7-12</strong></p>
+                        <ul class="benefit-list">
+                            <li>Department-specific Workshops</li>
+                            <li>AI Challenge Program</li>
+                            <li>Advanced Training</li>
+                            <li>Cross-department Projects</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="phase-card">
+                        <div class="phase-number">3</div>
+                        <h3>Integration & Sustainability</h3>
+                        <p><strong>Tháng 13-18</strong></p>
+                        <ul class="benefit-list">
+                            <li>Process Integration</li>
+                            <li>Custom AI Solutions</li>
+                            <li>Train-the-trainer Programs</li>
+                            <li>Long-term Roadmap</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Training Program -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>Chương trình Đào tạo AI Literacy</h2>
+                
+                <div class="phase-grid">
+                    <div class="phase-card">
+                        <h3>Foundation Level</h3>
+                        <div class="stat-number" style="font-size: 1.5rem;">8 giờ</div>
+                        <p><strong>Đối tượng:</strong> Toàn bộ 580 nhân viên</p>
+                        <ul class="benefit-list">
+                            <li>AI Fundamentals</li>
+                            <li>Hands-on với ChatGPT</li>
+                            <li>Ethics & Safety</li>
+                            <li>Company Guidelines</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="phase-card">
+                        <h3>Intermediate Level</h3>
+                        <div class="stat-number" style="font-size: 1.5rem;">16 giờ</div>
+                        <p><strong>Đối tượng:</strong> 150-200 nhân viên</p>
+                        <ul class="benefit-list">
+                            <li>Advanced Prompting</li>
+                            <li>Multi-modal AI</li>
+                            <li>Department Applications</li>
+                            <li>Workflow Integration</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="phase-card">
+                        <h3>Advanced Level</h3>
+                        <div class="stat-number" style="font-size: 1.5rem;">24 giờ</div>
+                        <p><strong>Đối tượng:</strong> 30-50 AI Champions</p>
+                        <ul class="benefit-list">
+                            <li>AI Strategy Development</li>
+                            <li>Custom Solutions</li>
+                            <li>Change Management</li>
+                            <li>Innovation Leadership</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <h4>Department-Specific Modules</h4>
+                    <p>Engineering • Sales • Project Management • HR • Finance</p>
+                    <p>Mỗi phòng ban có workshop chuyên biệt với tools và use cases phù hợp</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: AI Tools & Portal -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>AI Portal & Công cụ</h2>
+                
+                <div class="highlight">
+                    <h3>AI Portal Features</h3>
+                    <ul class="benefit-list">
+                        <li>Single sign-on access đến multiple AI tools</li>
+                        <li>Usage tracking & analytics dashboard</li>
+                        <li>Internal knowledge base với company examples</li>
+                        <li>Discussion forums cho từng phòng ban</li>
+                        <li>Success story sharing platform</li>
+                        <li>Resource library với tutorials & templates</li>
+                    </ul>
+                </div>
+
+                <h3>AI Tools Integration</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>ChatGPT Enterprise</h4>
+                        <p>Custom instructions cho Taisei Oncho</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Microsoft Copilot</h4>
+                        <p>Office, Teams integration</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Claude Pro</h4>
+                        <p>Advanced reasoning tasks</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Specialized Tools</h4>
+                        <p>Department-specific applications</p>
+                    </div>
+                </div>
+
+                <div class="cta-section">
+                    <h4>Security & Governance</h4>
+                    <p>Đảm bảo data privacy, compliance và responsible AI use thông qua framework bảo mật toàn diện</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Budget & Timeline -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>Ngân sách & Timeline</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">80-120</span>
+                        <div class="stat-label">Triệu yen (18 tháng)</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">18</span>
+                        <div class="stat-label">Tháng triển khai</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">2-3</span>
+                        <div class="stat-label">Năm payback period</div>
+                    </div>
+                </div>
+
+                <h3>Phân bổ Ngân sách</h3>
+                <div class="budget-breakdown">
+                    <div class="budget-item">
+                        <div class="budget-amount">40%</div>
+                        <h4>Training & Development</h4>
+                        <p>32-48 triệu yen</p>
+                    </div>
+                    <div class="budget-item">
+                        <div class="budget-amount">35%</div>
+                        <h4>Technology & Tools</h4>
+                        <p>28-42 triệu yen</p>
+                    </div>
+                    <div class="budget-item">
+                        <div class="budget-amount">20%</div>
+                        <h4>Consulting & Support</h4>
+                        <p>16-24 triệu yen</p>
+                    </div>
+                    <div class="budget-item">
+                        <div class="budget-amount">5%</div>
+                        <h4>Operations</h4>
+                        <p>4-6 triệu yen</p>
+                    </div>
+                </div>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h4>Tháng 1-6: Foundation Setup</h4>
+                        <p>AI Portal, Basic Training, Pilot Projects</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Tháng 7-12: Specialization</h4>
+                        <p>Department Workshops, AI Challenges</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Tháng 13-18: Integration</h4>
+                        <p>Process Integration, Sustainability</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: ROI & Benefits -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>ROI & Lợi ích Kinh doanh</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">200-350%</span>
+                        <div class="stat-label">ROI trong 5 năm</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">45-90M</span>
+                        <div class="stat-label">Yen lợi ích hàng năm</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">2-3</span>
+                        <div class="stat-label">Năm payback period</div>
+                    </div>
+                </div>
+
+                <h3>Lợi ích Định lượng (Hàng năm)</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h4>Productivity Improvements: 30-45M yen/năm</h4>
+                        <ul class="benefit-list">
+                            <li>Document creation time reduction: 20-30%</li>
+                            <li>Data analysis automation: 40-50%</li>
+                            <li>Meeting preparation efficiency: 25-35%</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Quality Enhancements: 15-25M yen/năm</h4>
+                        <ul class="benefit-list">
+                            <li>Error reduction: 30-40%</li>
+                            <li>Improved proposal quality: 15-20% win rate</li>
+                            <li>Better decision making & risk reduction</li>
+                        </ul>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Innovation & Competitive Advantage: 10-20M yen/năm</h4>
+                        <ul class="benefit-list">
+                            <li>New AI-enhanced service offerings</li>
+                            <li>Faster project delivery: 10-15%</li>
+                            <li>Improved employee retention</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Next Steps & Call to Action -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>Bước tiếp theo</h2>
+                
+                <div class="highlight">
+                    <h3>Vision 3-5 năm: Taisei Oncho sẽ trở thành</h3>
+                    <ul class="benefit-list">
+                        <li><strong>AI-First Organization:</strong> Mọi nhân viên thành thạo AI tools</li>
+                        <li><strong>Industry Leader:</strong> Tiên phong AI trong ngành xây dựng Nhật Bản</li>
+                        <li><strong>Innovation Hub:</strong> Phát triển custom AI solutions</li>
+                        <li><strong>Knowledge Organization:</strong> AI-powered knowledge management</li>
+                        <li><strong>Agile Competitor:</strong> Adapt nhanh với market changes</li>
+                    </ul>
+                </div>
+
+                <h3>30 ngày đầu tiên</h3>
+                <div class="phase-grid">
+                    <div class="phase-card">
+                        <h4>Week 1-2</h4>
+                        <p>Project Initiation & Team Formation</p>
+                    </div>
+                    <div class="phase-card">
+                        <h4>Week 3-4</h4>
+                        <p>AI Portal Development & Security Framework</p>
+                    </div>
+                    <div class="phase-card">
+                        <h4>Week 5-6</h4>
+                        <p>Team Building & Content Development</p>
+                    </div>
+                    <div class="phase-card">
+                        <h4>Week 7-8</h4>
+                        <p>Pilot Preparation & Success Metrics</p>
+                    </div>
+                </div>
+
+                <div class="cta-section">
+                    <h3>Sẵn sàng bắt đầu AI journey cùng Taisei Oncho</h3>
+                    <p>Hãy cùng tạo ra tương lai AI-powered cho ngành xây dựng Nhật Bản</p>
+                    <button class="cta-button" onclick="alert('Liên hệ: Manus AI Consulting Team\nEmail: contact@manus-ai.com')">
+                        Liên hệ ngay để thảo luận chi tiết
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" onclick="previousSlide()">◀ Previous</button>
+        <button class="nav-btn" onclick="nextSlide()">Next ▶</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+
+document.getElementById('total-slides').textContent = totalSlides;
+
+// Initialize presentation
+function initPresentation() {
+    // Set up progress indicators
+    updateProgressIndicator();
+    
+    // Add touch support for mobile
+    addTouchSupport();
+    
+    // Add animation effects
+    initAnimations();
+    
+    // Preload next slide for smoother transitions
+    preloadSlides();
+}
+
+function showSlide(n) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = (n + totalSlides) % totalSlides;
+    slides[currentSlide].classList.add('active');
+    document.getElementById('current-slide').textContent = currentSlide + 1;
+    
+    // Update progress
+    updateProgressIndicator();
+    
+    // Trigger animations for current slide
+    triggerSlideAnimations();
+    
+    // Preload next slide
+    preloadSlides();
+    
+    // Update URL hash for bookmark support
+    window.location.hash = `slide-${currentSlide + 1}`;
+}
+
+function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+        showSlide(currentSlide + 1);
+    }
+}
+
+function previousSlide() {
+    if (currentSlide > 0) {
+        showSlide(currentSlide - 1);
+    }
+}
+
+// Enhanced keyboard navigation
+document.addEventListener('keydown', function(e) {
+    switch(e.key) {
+        case 'ArrowRight':
+        case ' ':
+        case 'PageDown':
+            e.preventDefault();
+            nextSlide();
+            break;
+        case 'ArrowLeft':
+        case 'PageUp':
+            e.preventDefault();
+            previousSlide();
+            break;
+        case 'Home':
+            e.preventDefault();
+            showSlide(0);
+            break;
+        case 'End':
+            e.preventDefault();
+            showSlide(totalSlides - 1);
+            break;
+        case 'Escape':
+            toggleFullscreen();
+            break;
+        case 'f':
+        case 'F':
+            if (e.ctrlKey) {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+            break;
+    }
+});
+
+// Touch support for mobile devices
+function addTouchSupport() {
+    let startX = 0;
+    let startY = 0;
+    
+    document.addEventListener('touchstart', function(e) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    });
+    
+    document.addEventListener('touchend', function(e) {
+        if (!startX || !startY) return;
+        
+        let endX = e.changedTouches[0].clientX;
+        let endY = e.changedTouches[0].clientY;
+        
+        let diffX = startX - endX;
+        let diffY = startY - endY;
+        
+        // Only trigger if horizontal swipe is longer than vertical
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            if (Math.abs(diffX) > 50) { // Minimum swipe distance
+                if (diffX > 0) {
+                    nextSlide(); // Swipe left -> next slide
+                } else {
+                    previousSlide(); // Swipe right -> previous slide
+                }
+            }
+        }
+        
+        // Reset values
+        startX = 0;
+        startY = 0;
+    });
+}
+
+// Progress indicator
+function updateProgressIndicator() {
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar) {
+        const progress = ((currentSlide + 1) / totalSlides) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+}
+
+// Animation effects
+function initAnimations() {
+    // Add intersection observer for animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    });
+    
+    // Observe all animated elements
+    document.querySelectorAll('.stat-card, .timeline-item, .phase-card, .budget-item').forEach(el => {
+        observer.observe(el);
+    });
+}
+
+function triggerSlideAnimations() {
+    const currentSlideEl = slides[currentSlide];
+    
+    // Animate stat cards with delay
+    const statCards = currentSlideEl.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.animation = 'slideInUp 0.6s ease-out forwards';
+        }, index * 100);
+    });
+    
+    // Animate timeline items
+    const timelineItems = currentSlideEl.querySelectorAll('.timeline-item');
+    timelineItems.forEach((item, index) => {
+        setTimeout(() => {
+            item.style.animation = 'slideInLeft 0.6s ease-out forwards';
+        }, index * 150);
+    });
+    
+    // Animate phase cards
+    const phaseCards = currentSlideEl.querySelectorAll('.phase-card');
+    phaseCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.animation = 'fadeInUp 0.6s ease-out forwards';
+        }, index * 200);
+    });
+}
+
+// Preload slides for better performance
+function preloadSlides() {
+    const nextSlideIndex = (currentSlide + 1) % totalSlides;
+    const prevSlideIndex = (currentSlide - 1 + totalSlides) % totalSlides;
+    
+    // Add preload class to adjacent slides
+    slides[nextSlideIndex].classList.add('preload');
+    slides[prevSlideIndex].classList.add('preload');
+}
+
+// Fullscreen toggle
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log('Error attempting to enable fullscreen:', err);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+// Auto-advance functionality (optional)
+let autoAdvanceTimer;
+let isAutoAdvanceEnabled = false;
+
+function startAutoAdvance(interval = 10000) { // 10 seconds default
+    if (isAutoAdvanceEnabled) return;
+    
+    isAutoAdvanceEnabled = true;
+    autoAdvanceTimer = setInterval(() => {
+        if (currentSlide < totalSlides - 1) {
+            nextSlide();
+        } else {
+            stopAutoAdvance(); // Stop at last slide
+        }
+    }, interval);
+}
+
+function stopAutoAdvance() {
+    if (autoAdvanceTimer) {
+        clearInterval(autoAdvanceTimer);
+        autoAdvanceTimer = null;
+        isAutoAdvanceEnabled = false;
+    }
+}
+
+function toggleAutoAdvance() {
+    if (isAutoAdvanceEnabled) {
+        stopAutoAdvance();
+    } else {
+        startAutoAdvance();
+    }
+}
+
+// URL hash navigation support
+function handleHashChange() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#slide-')) {
+        const slideNumber = parseInt(hash.replace('#slide-', '')) - 1;
+        if (slideNumber >= 0 && slideNumber < totalSlides) {
+            showSlide(slideNumber);
+        }
+    }
+}
+
+// Presentation timer
+let presentationStartTime;
+let timerInterval;
+
+function startPresentationTimer() {
+    presentationStartTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+    const elapsed = Date.now() - presentationStartTime;
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    
+    const timerElement = document.getElementById('presentation-timer');
+    if (timerElement) {
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+function stopPresentationTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+// Print/export functionality
+function preparePrintView() {
+    // Show all slides for printing
+    slides.forEach(slide => {
+        slide.classList.add('print-view');
+    });
+    
+    // Hide navigation
+    document.querySelector('.navigation').style.display = 'none';
+    document.querySelector('.slide-indicator').style.display = 'none';
+    
+    window.print();
+    
+    // Restore normal view after printing
+    setTimeout(() => {
+        slides.forEach(slide => {
+            slide.classList.remove('print-view');
+        });
+        document.querySelector('.navigation').style.display = 'flex';
+        document.querySelector('.slide-indicator').style.display = 'block';
+    }, 1000);
+}
+
+// Slide notes functionality (presenter mode)
+const slideNotes = {
+    0: "Chào mừng đến với đề xuất AI Implementation cho Taisei Oncho. Hôm nay chúng ta sẽ thảo luận về việc xây dựng văn hóa AI tự chủ và bền vững.",
+    1: "Với 72 năm kinh nghiệm và 580 nhân viên, Taisei Oncho đang đối mặt với 4 thách thức chính về AI literacy.",
+    2: "Framework 3 giai đoạn được thiết kế dựa trên nguyên tắc hệ thống hóa của công ty.",
+    // Add more notes for other slides...
+};
+
+function showSlideNotes() {
+    const notes = slideNotes[currentSlide] || "Không có ghi chú cho slide này.";
+    alert(`Slide ${currentSlide + 1} Notes:\n\n${notes}`);
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initPresentation();
+    
+    // Handle initial hash
+    if (window.location.hash) {
+        handleHashChange();
+    }
+    
+    // Start presentation timer
+    startPresentationTimer();
+});
+
+// Handle hash changes for URL navigation
+window.addEventListener('hashchange', handleHashChange);
+
+// Handle page visibility change (pause auto-advance when tab is not visible)
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && isAutoAdvanceEnabled) {
+        stopAutoAdvance();
+    }
+});
+
+// Add keyboard shortcuts help
+function showKeyboardShortcuts() {
+    const shortcuts = `
+Phím tắt điều hướng:
+• → / Space / Page Down: Slide tiếp theo
+• ← / Page Up: Slide trước
+• Home: Slide đầu tiên
+• End: Slide cuối cùng
+• Esc / Ctrl+F: Chế độ toàn màn hình
+• H: Hiển thị trợ giúp này
+• N: Hiển thị ghi chú slide
+• P: In presentation
+• A: Bật/tắt auto-advance
+    `;
+    alert(shortcuts);
+}
+
+// Add H key for help
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'h' || e.key === 'H') {
+        showKeyboardShortcuts();
+    } else if (e.key === 'n' || e.key === 'N') {
+        showSlideNotes();
+    } else if (e.key === 'p' || e.key === 'P') {
+        preparePrintView();
+    } else if (e.key === 'a' || e.key === 'A') {
+        toggleAutoAdvance();
+    }
+});
+
+// Mouse wheel navigation
+document.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) > 50) { // Prevent accidental scrolling
+        if (e.deltaY > 0) {
+            nextSlide();
+        } else {
+            previousSlide();
+        }
+        e.preventDefault();
+    }
+});
+</script>
+
+</body>
+</html>
